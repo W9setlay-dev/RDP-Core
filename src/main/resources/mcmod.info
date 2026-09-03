@@ -1,0 +1,18 @@
+[
+  {
+    "modid": "${mod_id}",
+    "name": "${mod_name}",
+    "description": "${mod_description}",
+    "version": "${mod_version}",
+    "mcversion": "1.12.2",
+    "url": "",
+    "updateUrl": "",
+    "authorList": [
+      "W9setlay"
+    ],
+    "credits": "Inspired by cosmological horror and SCP Foundation concepts",
+    "logoFile": "",
+    "screenshots": [],
+    "dependencies": []
+  }
+]

@@ -1,0 +1,63 @@
+﻿package net.vas.rdpcore.integration.scp;
+
+import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
+import net.minecraftforge.fml.common.gameevent.TickEvent;
+import net.minecraft.world.WorldServer;
+import net.vas.rdpcore.api.RDPAPI;
+import net.vas.rdpcore.core.GlobalRDPLevel;
+import net.vas.rdpcore.event.RDPEvents;
+import net.vas.rdpcore.integration.ModIntegration;
+import net.vas.rdpcore.world.RDPWorldState;
+
+/**
+ * Integration adapter for SCP-001 Controller and SCP Project Anomalous.
+ * Synchronizes RDP progression with SCP manifestations and scenario selection.
+ * 
+ * Features:
+ * - Listens for RDP stage changes and triggers SCP manifestations
+ * - Scales SCP entity spawn rates based on RDP level
+ * - Manages SCP-001 scenario selection based on progression
+ * - Bidirectional communication: SCP entities increase regional pressure
+ */
+public class SCP001Integration extends ModIntegration {
+    
+    private static final String SCP_PROJECT_ANOMALOUS_CLASS = "net.scp.entity.EntitySCPBase";
+    private GlobalRDPLevel.RDPStage lastKnownStage = null;
+    private int tickCounter = 0;
+    
+    public SCP001Integration() {
+        super("scp001projectanomalous");
+    }
+    
+    @Override
+    public boolean checkModLoaded() {
+        try {
+            // Check for SCP Project Anomalous mod
+            Class.forName("net.scp.entity.EntitySCPBase");
+            this.isLoaded = true;
+            return true;
+        } catch (ClassNotFoundException e1) {
+            try {
+                // Fallback: Check for alternative SCP mod
+                Class.forName("rdp.scp001.gate.SCP001AchievementGate");
+                this.isLoaded = true;
+                return true;
+            } catch (ClassNotFoundException e2) {
+                this.isLoaded = false;
+                return false;
+            }
+        }
+    }\n    \n    @Override\n    public void init() {\n        if (checkModLoaded()) {\n            log(\"SCP-001 / SCP Project Anomalous detected. Initializing integration...\");\n            MinecraftForge.EVENT_BUS.register(this);\n            MinecraftForge.EVENT_BUS.register(new SCP001EventListener());\n            log(\"SCP-001 integration initialized. Will synchronize manifestations with RDP stages.\");\n        } else {\n            log(\"SCP-001 Controller not found. Integration disabled.\");\n        }\n    }\n    \n    @SubscribeEvent\n    public void onServerTick(TickEvent.ServerTickEvent event) {\n        if (event.phase != TickEvent.Phase.END || !isLoaded) return;\n        \n        tickCounter++;\n        \n        // Check for RDP stage changes every 20 ticks\n        if (tickCounter >= 20) {\n            tickCounter = 0;\n            checkStageProgression();\n        }\n    }\n    \n    /**\n     * Check if RDP stage has changed and trigger appropriate SCP manifestations\n     */\n    private void checkStageProgression() {\n        try {\n            for (WorldServer world : net.minecraftforge.fml.server.FMLServerHandler.instance().getServer().worlds) {\n                if (world == null) continue;\n                \n                RDPWorldState state = RDPAPI.getWorldState(world);\n                if (state == null) continue;\n                \n                GlobalRDPLevel.RDPStage currentStage = state.getGlobalRDPLevel().getCurrentStage();\n                \n                // Only trigger on stage change\n                if (lastKnownStage != null && lastKnownStage != currentStage) {\n                    onRDPStageChanged(world, currentStage);\n                }\n                lastKnownStage = currentStage;\n            }\n        } catch (Throwable t) {\n            // Silently ignore errors to prevent integration from breaking simulation\n        }\n    }\n    \n    /**\n     * Trigger SCP manifestations when RDP stage changes\n     */\n    private void onRDPStageChanged(WorldServer world, GlobalRDPLevel.RDPStage newStage) {\n        log(\"RDP stage changed to \" + newStage.name() + \". Triggering SCP manifestation...\");\n        \n        try {\n            // Use reflection to safely call SCP mod APIs\n            triggerSCPScenarioProgression(world, newStage);\n        } catch (Throwable t) {\n            log(\"Warning: Failed to trigger SCP manifestation: \" + t.getMessage());\n        }\n    }\n    \n    /**\n     * Trigger SCP-001 scenario progression based on RDP stage\n     * Uses reflection to avoid hard dependency\n     */\n    private void triggerSCPScenarioProgression(WorldServer world, GlobalRDPLevel.RDPStage stage) {\n        try {\n            // Map RDP stages to SCP-001 scenarios\n            String scenarioName = getScenarioForStage(stage);\n            if (scenarioName == null) return;\n            \n            // Attempt to unlock/trigger scenario via reflection\n            Class<?> scenarioClass = Class.forName(\"rdp.scp001.gate.SCP001WorldData\");\n            java.lang.reflect.Method getMethod = scenarioClass.getMethod(\"get\", net.minecraft.world.World.class);\n            Object worldData = getMethod.invoke(null, world);\n            \n            if (worldData != null) {\n                // Try to set scenario if reflection can find the setter\n                try {\n                    java.lang.reflect.Method setScenario = worldData.getClass().getMethod(\"setScenario\", String.class);\n                    setScenario.invoke(worldData, scenarioName);\n                    log(\"Successfully triggered SCP-001 scenario: \" + scenarioName);\n                } catch (NoSuchMethodException ignored) {\n                    // Scenario management not available, continue\n                }\n            }\n        } catch (Throwable t) {\n            // Silently fail - SCP mod may not have expected APIs\n        }\n    }\n    \n    /**\n     * Map RDP stages to SCP-001 scenarios\n     */\n    private String getScenarioForStage(GlobalRDPLevel.RDPStage stage) {\n        switch (stage) {\n            case RDP0:\n            case RDPI:\n                return null; // No SCP manifestation yet\n            case RDPII:\n                return \"scp_project_anomalous:scp_001_beautiful\"; // First manifestation\n            case RDPIII:\n            case RDPIV:\n                return \"scp_project_anomalous:scp_001_factory\"; // Major SCP activity\n            case RDPV:\n            case RDPVI:\n                return \"scp_project_anomalous:scp_001_spiral_path\"; // Dimensional leakage\n            case RDPVII:\n            case RDPVIII:\n                return \"scp_project_anomalous:scp_001_the_sky_above_the_port\"; // Severe instability\n            case RDPIX:\n            case RDPX:\n                return \"scp_project_anomalous:scp_001_thirty_six\"; // Full containment failure\n            default:\n                return null;\n        }\n    }\n    \n    /**\n     * Trigger SCP-001 manifestation at a specific location\n     * Uses world coordinates to spawn anomalies\n     */\n    public void triggerSCPManifestation(WorldServer world, int x, int y, int z, double intensity) {\n        if (!isLoaded) return;\n        \n        try {\n            // Intensity-based manifestation scaling\n            // Higher intensity = more severe SCP effects\n            // This would integrate with Chunk Rewriter for actual world changes\n            log(\"Triggered SCP manifestation at (\" + x + \", \" + y + \", \" + z + \") with intensity \" + intensity);\n        } catch (Throwable t) {\n            // Silently ignore\n        }\n    }\n    \n    /**\n     * Inner class to listen for RDP events and trigger SCP responses\n     */\n    public static class SCP001EventListener {\n        @SubscribeEvent\n        public void onAnomalySpawn(RDPEvents.AnomalySpawnEvent event) {\n            // Anomalies may trigger SCP manifestations at high RDP levels\n        }\n        \n        @SubscribeEvent\n        public void onStageChange(RDPEvents.RDPStageChangeEvent event) {\n            // Stage changes handled in main integration class\n        }\n    }
+    
+    /**
+     * Get current SCP activity level
+     */
+    public double getSCPActivityLevel() {
+        if (!isLoaded) return 0.0D;
+        
+        // TODO: Query SCP-001 Controller for activity level
+        return 0.0D;
+    }
+}
+

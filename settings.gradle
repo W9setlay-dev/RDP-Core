@@ -1,0 +1,16 @@
+pluginManagement {
+    repositories {
+        maven {
+            name = "WagYourTail"
+            url = uri("https://maven.wagyourtail.xyz/releases")
+        }
+        maven {
+            name = "WagYourTail Snapshots"
+            url = uri("https://maven.wagyourtail.xyz/snapshots")
+        }
+        gradlePluginPortal()
+        mavenCentral()
+    }
+}
+
+rootProject.name = "rdpcore"
