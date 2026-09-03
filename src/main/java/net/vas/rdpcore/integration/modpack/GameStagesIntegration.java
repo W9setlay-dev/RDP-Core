@@ -200,7 +200,7 @@ public class GameStagesIntegration extends ModIntegration {
             Class<?> gameStagesClass = Class.forName("net.darkhax.gamestages.GameStages");
             java.lang.reflect.Method hasStageMethod = gameStagesClass.getMethod("hasStage", net.minecraft.entity.player.EntityPlayer.class, String.class);
             Object result = hasStageMethod.invoke(null, entityPlayer, stageName);
-            return result instanceof Boolean ? (Boolean) result : false;
+            return result instanceof Boolean && (Boolean) result;
         } catch (Throwable t) {
             return false;
         }
