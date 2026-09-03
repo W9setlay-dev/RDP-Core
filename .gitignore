@@ -1,0 +1,71 @@
+# Gradle and build artifacts
+.gradle/
+build/
+out/
+bin/
+classes/
+run/
+target/
+*.class
+
+# IDE/editor files
+.idea/
+.vscode/
+*.iml
+*.ipr
+*.iws
+.classpath
+.project
+.settings/
+
+# Forge / local runtime data
+logs/
+crash-reports/
+screenshots/
+saves/
+usercache/
+local.properties
+
+# Generated or temporary files
+*.log
+*.log.*
+*.tmp
+*.bak
+*.orig
+
+# Project-specific generated artifacts
+build-*.log
+build-*.txt
+full-build*.log
+full-build*.txt
+build_output*.log
+build_result*.log
+compile-errors.txt
+
+# Markdown documentation policy
+# Ignore AI-generated reports/status docs and keep only the canonical project docs.
+*.md
+*.MD
+!README.md
+!README.MD
+!INSTALLATION_GUIDE.md
+!BUILD_ENVIRONMENT_GUIDE.md
+!RDP_API_REFERENCE.md
+!docs/README.md
+!docs/ARCHITECTURE_AND_INTEGRATION_PLAN.md
+!docs/INSTALLATION_GUIDE.md
+!docs/MODPACK_INTEGRATION_GUIDE.md
+!docs/DEVELOPER_GUIDE.md
+
+# Explicitly ignore AI/report-style markdown artifacts
+*_REPORT.md
+*_SUMMARY.md
+*_STATUS.md
+*_CHECKLIST.md
+*REWORK*.md
+*STAGE*.md
+*PHASE*.md
+*DELIVERY*.md
+*IMPLEMENTATION*.md
+*PRODUCTION*.md
+*GRADLE*.md
