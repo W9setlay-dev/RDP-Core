@@ -3,7 +3,7 @@ package net.vas.rdpcore.anomaly.dimensional;
 import net.vas.rdpcore.anomaly.Anomaly;
 
 /**
- * Dimensional anomalies represent inter-dimensional distortions.
+ * Dimensional anomalies represent interdimensional distortions.
  * Effects: Dimension rifts, entity spawning from other dimensions, dimensional bleeding
  */
 public class DimensionalAnomaly extends Anomaly {
