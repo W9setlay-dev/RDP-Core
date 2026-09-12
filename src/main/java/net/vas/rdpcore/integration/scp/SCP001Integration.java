@@ -39,7 +39,7 @@ public class SCP001Integration extends ModIntegration {
             "scp_project_anomalous:scp001_prototype")));
 
     private static final String[] FOUNDATION_CLASSES = {
-            "com.w9setlay.rdpfoundation.integration.RDPFoundationIntegration",
+            "com.w9setlay.scp001controller.RDPFoundationIntegration",
             "com.w9setlay.rdpfoundation.RDPFoundationIntegration",
             "net.vas.rdpfoundation.integration.RDPFoundationIntegration",
             "net.vas.rdpfoundation.RDPFoundationIntegration"
