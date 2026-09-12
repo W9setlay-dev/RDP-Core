@@ -261,12 +261,20 @@ Expected server impact on large modpacks:
 gradlew.bat clean build
 ```
 
-### Testing
+### Testing and deployment
 
 ```bash
-# Unit tests (if added)
-gradlew.bat test
+# Run unit tests (deterministic, no Minecraft)
+gradlew.bat clean test
+
+# Full build: compile, remap, test
+gradlew.bat build
 ```
+
+Comprehensive guides:
+- **[TESTING_AND_SCALING.md](TESTING_AND_SCALING.md)** — Test suite structure, unit/integration tests, scaling model, release workflow
+- **[TEST_COVERAGE_AND_METRICS.md](TEST_COVERAGE_AND_METRICS.md)** — Coverage by module, performance baselines, release validation checklist
+- **[PERFORMANCE_TUNING.md](PERFORMANCE_TUNING.md)** — Configuration optimization, profiling, common scenarios
 
 ### Code Structure
 

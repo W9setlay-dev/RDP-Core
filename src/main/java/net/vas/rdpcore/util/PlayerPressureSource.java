@@ -29,28 +29,37 @@ public class PlayerPressureSource implements IRdpPressureSource {
             if (server == null) return 0.0D;
 
             int count = getPressureCount(world, region, server);
-            return count * perPlayerPressure;
+            return pressureForPlayerCount(count, perPlayerPressure);
         } catch (Throwable t) {
             return 0.0D;
         }
     }
 
     private static int getPressureCount(World world, RDPRegion region, MinecraftServer server) {
-        int regionBlockSize = RDPConfig.REGION_SIZE_CHUNKS * 16;
-        int minX = region.getRegionX() * regionBlockSize;
-        int minZ = region.getRegionZ() * regionBlockSize;
-        int maxX = minX + regionBlockSize;
-        int maxZ = minZ + regionBlockSize;
         int count = 0;
         for (EntityPlayerMP player : server.getPlayerList().getPlayers()) {
             if (player == null || player.world != world) continue;
 
-            int px = MathHelper.floor(player.posX);
-            int pz = MathHelper.floor(player.posZ);
-            if (px >= minX && px < maxX && pz >= minZ && pz < maxZ) {
+            if (isInsideRegion(player.posX, player.posZ, region.getRegionX(), region.getRegionZ(),
+                    RDPConfig.REGION_SIZE_CHUNKS)) {
                 count++;
             }
         }
         return count;
+    }
+
+    static double pressureForPlayerCount(int count, double pressurePerPlayer) {
+        return count * pressurePerPlayer;
+    }
+
+    static boolean isInsideRegion(double posX, double posZ, int regionX, int regionZ, int regionSizeChunks) {
+        int regionBlockSize = regionSizeChunks * 16;
+        int minX = regionX * regionBlockSize;
+        int minZ = regionZ * regionBlockSize;
+        int maxX = minX + regionBlockSize;
+        int maxZ = minZ + regionBlockSize;
+        int blockX = MathHelper.floor(posX);
+        int blockZ = MathHelper.floor(posZ);
+        return blockX >= minX && blockX < maxX && blockZ >= minZ && blockZ < maxZ;
     }
 }
