@@ -159,7 +159,7 @@ public class RDPAPI {
     }
     
     /**
-     * Check if Judgement Day is active
+     * Check if Judgment Day is active
      */
     public static boolean isJudgementDayActive(World world) {
         RDPWorldState state = getWorldState(world);
@@ -167,7 +167,7 @@ public class RDPAPI {
     }
     
     /**
-     * Trigger Judgement Day
+     * Trigger Judgment Day
      */
     public static void triggerJudgementDay(World world) {
         RDPWorldState state = getWorldState(world);

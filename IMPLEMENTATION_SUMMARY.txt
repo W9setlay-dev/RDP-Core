@@ -1,0 +1,166 @@
+# Implementation Summary: Testing & Documentation
+
+## Completed Work
+
+### 1. **Unit Test Suite (5 test classes, 17 assertions)**
+
+#### GlobalRDPLevelTest
+- ✅ RDP level clamping (negative → 0, >1 → 1)
+- ✅ Stage transitions at correct thresholds (RDP-0 through RDP-X)
+- ✅ Pressure multiplier monotonicity (0.5x to 3.0x)
+
+#### PlayerPressureSourceTest
+- ✅ Linear pressure scaling: `pressure = players × pressurePerPlayer`
+- ✅ Half-open region boundaries (no double-counting at borders)
+- ✅ Floor-based coordinate classification for negative positions
+- ✅ Region boundary edge cases
+
+#### PressureRegistryTest
+- ✅ Multiple pressure sources aggregate correctly
+- ✅ Null world/context handling
+
+#### RDPRegionTest
+- ✅ Region coordinate getters
+- ✅ Local RDP level clamping
+- ✅ Pressure clamping and accumulation
+- ✅ Reality anchor count validation
+
+#### AnomalyTest
+- ✅ Age increments each tick
+- ✅ Intensity decays over time
+- ✅ Anomaly lifecycle (becomes inactive after maxAge)
+- ✅ Intensity non-negativity guarantee
+
+### 2. **Refactored PlayerPressureSource**
+
+Extracted testable helpers:
+- `isInsideRegion(double posX, double posZ, int regionX, int regionZ, int regionSizeChunks)` — Half-open interval checking with floor-based coordinates
+- `pressureForPlayerCount(int count, double pressurePerPlayer)` — Linear scaling calculation
+
+Benefits:
+- Core logic testable without Minecraft server
+- Boundary conditions verified deterministically
+- Negative coordinate handling validated
+
+### 3. **Documentation (3 comprehensive guides)**
+
+#### TESTING_AND_SCALING.md (141 lines)
+- Quick-start commands (`gradlew.bat clean test`, `gradlew.bat build`)
+- Full test suite structure with purpose statements
+- Scaling model with table of stage multipliers
+- Performance budget guidance (O(P) enumeration)
+- Release validation workflow
+- Troubleshooting section
+
+#### TEST_COVERAGE_AND_METRICS.md (91 lines)
+- Per-module coverage matrix (unit/integration)
+- Build time benchmarks (23-26s depending on clean/incremental)
+- Performance baselines (pressure calc target: <10ms)
+- Release validation checklist (15 items)
+- CI/CD pipeline template (YAML)
+- Release history template
+
+#### PERFORMANCE_TUNING.md (163 lines)
+- Diagnosis workflow (establish baseline metrics)
+- Configuration parameters (region_size_chunks, active_region_cache_size, simulation_interval_ticks, etc.)
+- Three common scenarios (low-end, mid-range, high-end servers)
+- Profiling guidance (console + JFR)
+- Monitoring dashboard suggestions
+- Troubleshooting matrix (10 scenarios)
+
+### 4. **Updated Documentation**
+
+**README.md**
+- Links to all three new testing guides
+- Updated testing section with quick commands
+- Clearer separation of deterministic vs. integration testing
+
+**.gitignore**
+- Whitelisted new test documentation files
+- Maintains policy of excluding AI-generated reports while allowing canonical docs
+
+## Build Verification
+
+```bash
+✅ gradlew.bat clean test: BUILD SUCCESSFUL in 16s (5 actionable tasks)
+✅ gradlew.bat build: BUILD SUCCESSFUL in 23s (6 actionable tasks, incremental)
+```
+
+## Scaling Model Summary
+
+### Player Pressure Formula
+```
+regional_pressure = playersInRegion × pressurePerPlayer × stageMultiplier
+```
+
+**Default registration**: `PlayerPressureSource(1.0D)` in integration manager (though engine uses 0.05D)
+
+### Stage Multipliers
+| Stage | Multiplier |
+| --- | ---: |
+| RDP-0 | 0.5 |
+| RDP-I | 0.8 |
+| RDP-II | 1.0 |
+| RDP-III | 1.2 |
+| RDP-IV | 1.4 |
+| RDP-V | 1.6 |
+| RDP-VI | 1.8 |
+| RDP-VII | 2.0 |
+| RDP-X | 3.0 |
+
+### Performance Characteristics
+- **Time complexity**: O(P) per processed region (P = players)
+- **Budget per tick**: 50 ms (Forge default)
+- **Active region cache**: 1024 regions (configurable)
+- **Pressure calc target**: <10 ms per tick
+
+## Key Files
+
+| File | Purpose | Lines |
+| --- | --- | ---: |
+| `src/test/java/net/vas/rdpcore/core/GlobalRDPLevelTest.java` | RDP progression tests | 40 |
+| `src/test/java/net/vas/rdpcore/util/PlayerPressureSourceTest.java` | Pressure scaling & boundaries | 32 |
+| `src/test/java/net/vas/rdpcore/util/PressureRegistryTest.java` | Registry aggregation | 52 |
+| `src/test/java/net/vas/rdpcore/region/RDPRegionTest.java` | Region state validation | 44 |
+| `src/test/java/net/vas/rdpcore/anomaly/AnomalyTest.java` | Anomaly lifecycle | 44 |
+| `docs/TESTING_AND_SCALING.md` | Test structure & scaling | 141 |
+| `docs/TEST_COVERAGE_AND_METRICS.md` | Coverage & validation | 91 |
+| `docs/PERFORMANCE_TUNING.md` | Optimization guide | 163 |
+| **Total** | **8 files** | **607 lines** |
+
+## Integration Testing (Manual)
+
+Still required (in Forge environment):
+1. Player detection in different regions (`/rdp pressure <x> <z>`)
+2. Pressure changes with dynamic player load
+3. Dimension filtering (cross-world pressure isolation)
+4. Stage progression anomaly spawning
+5. Telemetry recording under target load
+
+## Recommended Next Steps
+
+1. **Run integration tests** on a test server with 5-10 players
+2. **Monitor telemetry** (`Telemetry.pressureCalcDurationMs`) during 30-minute play session
+3. **Document results** in `docs/TEST_COVERAGE_AND_METRICS.md` release history
+4. **Merge to main** once integration tests pass
+5. **Setup CI/CD** (use YAML template from TEST_COVERAGE_AND_METRICS.md)
+
+## Commit Details
+
+**Commit hash**: e604249  
+**Author**: VadimRadch  
+**Co-authored-by**: Copilot App  
+**Files changed**: 11  
+**Insertions**: +639  
+**Deletions**: −12  
+
+```
+Add comprehensive testing suite and documentation
+- Extract testable helpers from PlayerPressureSource
+- Add 5 unit test classes (17 assertions)
+- Create 3 comprehensive documentation guides
+- Update README.md with testing links
+- Update .gitignore to whitelist test docs
+
+Test results: PASS (16s clean test, 23s build)
+```

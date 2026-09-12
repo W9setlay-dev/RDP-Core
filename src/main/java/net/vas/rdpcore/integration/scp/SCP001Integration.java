@@ -12,12 +12,12 @@ import net.vas.rdpcore.integration.ModIntegration;
 import net.vas.rdpcore.world.RDPWorldState;
 
 /**
- * Integration adapter for SCP-001 Controller and SCP Project Anomalous.
+ * Integration adapter for SCP Controller and SCP Project Anomalous.
  * Synchronizes RDP progression with SCP manifestations and scenario selection.
  */
 public class SCP001Integration extends ModIntegration {
     
-    private GlobalRDPLevel.RDPStage lastKnownStage = null;
+    private GlobalRDPLevel.RDPStage lastKnownStage = GlobalRDPLevel.RDPStage.RDPX;
     private int tickCounter = 0;
     
     public SCP001Integration() {

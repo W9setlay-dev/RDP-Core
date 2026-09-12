@@ -2,15 +2,14 @@ package net.vas.rdpcore.core;
 
 import java.util.HashMap;
 import java.util.Map;
-import net.minecraft.world.World;
 import net.minecraftforge.common.util.INBTSerializable;
 import net.minecraft.nbt.NBTTagCompound;
 
 /**
  * Global RDP Level - represents the progression of Reality Distortion Phenomenon
- * across the entire world. Values range from 0.0 (pristine) to 1.0 (RDP-X/Judgement Day).
- * 
- * Conceptual ranges:
+ * across the entire world. Values range from 0.0 (pristine) to 1.0 (RDP-X).
+ * <p>
+ * Ranges:
  * 0.00 - 0.09  -> RDP-0  (Normal Minecraft, small anomalies)
  * 0.10 - 0.w24  -> RDP-I  (First distortions)
  * 0.25 - 0.39  -> RDP-II (Regional instability, biome anomalies)
@@ -18,7 +17,7 @@ import net.minecraft.nbt.NBTTagCompound;
  * 0.55 - 0.69  -> RDP-IV (Reality instability, temporal effects)
  * 0.70 - 0.79  -> RDP-V (Dimensional leakage)
  * 0.80 - 0.89  -> RDP-VI (Spatial collapse, sky anomalies)
- * 0.90 - 0.96  -> RDP-VII (Cosmological instability)
+ * 0.90 - 0.96  -> RDP-VII (Reality instability)
  * 0.97 - 1.00  -> RDP-X (Reality breakdown)
  */
 public class GlobalRDPLevel implements INBTSerializable<NBTTagCompound> {

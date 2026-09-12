@@ -43,10 +43,10 @@ public abstract class ModIntegration {
     }
     
     protected void log(String message) {
-        LOGGER.info("[" + modId + "] " + message);
+        LOGGER.info("[{}] {}", modId, message);
     }
     
     protected void logError(String message, Throwable e) {
-        LOGGER.error("[" + modId + "] " + message, e);
+        LOGGER.error("[{}] {}", modId, message, e);
     }
 }

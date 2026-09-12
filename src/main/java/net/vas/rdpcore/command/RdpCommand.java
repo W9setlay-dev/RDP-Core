@@ -50,7 +50,8 @@ public class RdpCommand extends CommandBase {
         } else if (sub.equalsIgnoreCase("simulate")) {
             int cycles = 1;
             if (args.length >= 2) {
-                try { cycles = Integer.parseInt(args[1]); } catch (NumberFormatException e) { cycles = 1; }
+                try { cycles = Integer.parseInt(args[1]); } catch (NumberFormatException ignored) {
+                }
             }
             for (int i=0;i<cycles;i++) {
                 net.vas.rdpcore.RDPSimulationEngine.runSimulationForWorld((net.minecraft.world.WorldServer)sender.getEntityWorld());

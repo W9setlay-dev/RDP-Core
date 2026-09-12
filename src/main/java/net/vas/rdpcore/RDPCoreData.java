@@ -19,7 +19,7 @@ public class RDPCoreData {
         validateConfiguration();
         
         // Data structures are lazy-initialized on world load via RDPAPI
-        // No pre-loading needed; regions and world states are created on-demand
+        // No preloading needed; regions and world states are created on-demand
         
         LOGGER.info("R.D.P. Core data structures ready.");
         LOGGER.info("Global RDP will start at: {}", RDPConfig.ENABLE_RDP_PROGRESSION ? "enabled" : "disabled");

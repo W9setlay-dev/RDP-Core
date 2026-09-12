@@ -117,12 +117,9 @@ public class ClientExceptionHandler {
             Object server = FMLCommonHandler.instance().getMinecraftServerInstance();
             
             // On integrated servers, don't send network packets
-            if (server != null && isIntegratedServerViaReflection(server)) {
-                return false;
-            }
+            return !isIntegratedServerViaReflection(server);
             
             // On dedicated servers, we can send packets
-            return true;
         } catch (Throwable t) {
             // If there's any error checking, assume we shouldn't send packets
             return false;

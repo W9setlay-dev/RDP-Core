@@ -13,7 +13,7 @@ import org.apache.logging.log4j.Logger;
 /**
  * Event handlers for Forge world events.
  * All handlers are server-side only since RDP is a server-side mod.
- * 
+ * <p>
  * No longer performs reflection hacks or fragile server initialization.
  * Server context is managed by RDPServerLifecycleManager.
  */
@@ -38,7 +38,7 @@ public class RDPWorldEventHandler {
             }
             
             // Load saved data
-            net.minecraft.world.storage.WorldSavedData d = 
+            net.minecraft.world.storage.WorldSavedData d =
                 ((WorldServer)world).getPerWorldStorage().getOrLoadData(
                     net.vas.rdpcore.world.RDPWorldSavedData.class, 
                     net.vas.rdpcore.world.RDPWorldSavedData.DATA_NAME);

@@ -6,7 +6,7 @@ import net.minecraftforge.common.util.INBTSerializable;
 /**
  * Represents a permanent scar in reality left by mutations and RDP escalation.
  * Scars are created when regions undergo significant distortions and persist indefinitely.
- * 
+ * <p>
  * Scar Types:
  * - PHYSICAL: Block structure changes, geological distortions
  * - BIOLOGICAL: Mutation in flora/fauna, biological hybridization

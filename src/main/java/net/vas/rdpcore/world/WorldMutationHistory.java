@@ -14,7 +14,7 @@ import java.util.Deque;
  * - Pressure calculation based on recent mutation density
  * - Detection of escalating distortion patterns
  * - Save/load persistence of world mutation timeline
- * 
+ * <p>
  * Maintains a rolling history buffer (max 1000 events) to limit memory usage.
  */
 public class WorldMutationHistory implements INBTSerializable<NBTTagCompound> {

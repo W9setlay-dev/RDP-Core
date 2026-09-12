@@ -54,8 +54,6 @@ compile-errors.txt
 !docs/INSTALLATION_GUIDE.md
 !docs/MODPACK_INTEGRATION_GUIDE.md
 !docs/DEVELOPER_GUIDE.md
-!docs/TESTING_AND_SCALING.md
-!docs/TEST_COVERAGE_AND_METRICS.md
 !docs/PERFORMANCE_TUNING.md
 
 # Explicitly ignore AI/report-style markdown artifacts
