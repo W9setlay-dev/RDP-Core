@@ -60,6 +60,15 @@ if (anchor.isActive()) {
 
 ## Integration Examples
 
+### SCP-001 Controller
+
+RDP Core detects the optional `scp001controller` mod without a compile-time
+dependency. When the controller reports an enabled, unlocked, triggered or
+manifested world, RDP Core classifies the controller's registered
+`scp_project_anomalous:scp_001_*` entities and requests distortion fields
+through the optional RDP Foundation API. The integration reads the
+controller's public APIs only; it does not require controller event hooks.
+
 ### Example 1: Event-Driven Integration
 
 Listen for RDP stage changes:
