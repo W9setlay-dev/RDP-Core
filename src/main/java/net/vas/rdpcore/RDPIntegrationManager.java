@@ -18,7 +18,7 @@ import org.apache.logging.log4j.Logger;
  * - SCP-001 Controller / SCP Project Anomalous (scenario progression)
  * - Scape and Run: Parasites (SRP) (evolution scaling)
  * - GameStages (progression gating)
- * 
+ * <p>
  * Also registers pressure sources:
  * - Player pressure (entity count)
  * - SRP pressure (parasite entities)

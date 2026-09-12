@@ -4,7 +4,6 @@ import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.event.FMLInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPostInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
-import net.minecraftforge.fml.common.event.FMLServerAboutToStartEvent;
 import net.minecraftforge.common.MinecraftForge;
 
 import org.apache.logging.log4j.Logger;
@@ -14,7 +13,7 @@ import net.vas.rdpcore.config.RDPConfig;
 
 /**
  * R.D.P. Core - Reality Distortion Phenomenon
- * 
+ * <p>
  * A world-level simulation framework that unifies major modpack systems into one
  * coherent cosmological-horror phenomenon. RDP is NOT merely another biome, infection,
  * or event mechanic, but rather a fundamental world-state system where reality
