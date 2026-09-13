@@ -10,6 +10,7 @@ import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
 
 import net.vas.rdpcore.config.RDPConfig;
+import net.vas.rdpcore.client.CommonProxy;
 
 /**
  * R.D.P. Core - Reality Distortion Phenomenon
@@ -37,6 +38,11 @@ public class RDPCore {
     public static final String MOD_VERSION = "1.0.0";
     
     public static final Logger LOGGER = LogManager.getLogger(MOD_ID);
+
+    @net.minecraftforge.fml.common.SidedProxy(
+        clientSide = "net.vas.rdpcore.client.ClientProxy",
+        serverSide = "net.vas.rdpcore.client.CommonProxy")
+    public static CommonProxy PROXY;
     
     @Mod.Instance(MOD_ID)
     public static RDPCore INSTANCE;
@@ -55,6 +61,7 @@ public class RDPCore {
         // Initialize core data structures
         RDPCoreData.init();
         LOGGER.info("Core data structures initialized.");
+        PROXY.preInit();
     }
     
     @Mod.EventHandler

@@ -95,6 +95,14 @@ public class RDPConfig {
     public static boolean ENABLE_INTERDIMENSIONAL_GRAVITY = true;
     public static final GravityFieldConfig GRAVITY = GravityFieldConfig.defaults();
 
+    // Client cosmology renderer. Definitions are intentionally data driven while
+    // the renderer itself remains client-only.
+    public static boolean ENABLE_COSMOLOGY = true;
+    public static boolean COSMOLOGY_CLIENT_RENDERING = true;
+    public static boolean COSMOLOGY_DEBUG = false;
+    public static int COSMOLOGY_MAX_OBJECTS = 8;
+    public static double COSMOLOGY_TRANSITION_SECONDS = 3.0D;
+
     // Stage modifiers per RDP stage
     public static class StageModifiers {
         public double pressureMultiplier = 1.0D;
@@ -313,6 +321,17 @@ public class RDPConfig {
             GRAVITY.maxEntitiesProcessedPerTick = config.getInt("Maximum entities processed per tick", "gravity", 128, 0, 8192, "");
             GRAVITY.updateIntervalTicks = config.getInt("Update interval ticks", "gravity", 1, 1, 20, "");
             GRAVITY.validate();
+
+            ENABLE_COSMOLOGY = config.getBoolean("Enable cosmology", "cosmology", true,
+                "Enable RDP's world-space celestial renderer");
+            COSMOLOGY_CLIENT_RENDERING = config.getBoolean("Enable client rendering", "cosmology", true,
+                "Render configured RDP celestial objects on clients");
+            COSMOLOGY_DEBUG = config.getBoolean("Debug cosmology", "cosmology", false,
+                "Log cosmology state changes");
+            COSMOLOGY_MAX_OBJECTS = config.getInt("Maximum celestial objects", "cosmology", 8, 0, 64,
+                "Hard per-frame safety cap");
+            COSMOLOGY_TRANSITION_SECONDS = config.getFloat("Transition seconds", "cosmology", 3.0F, 0.0F, 120.0F,
+                "Default fade duration for celestial objects");
             
             if (config.hasChanged()) {
                 config.save();
