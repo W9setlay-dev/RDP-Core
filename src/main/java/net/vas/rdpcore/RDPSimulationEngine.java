@@ -117,7 +117,16 @@ public class RDPSimulationEngine {
             region.setPressure(pressure);
 
             // simple local RDP evolution: influenced by pressure and anchors
-            double anchorEffect = Math.max(0.0D, region.getRealityAnchorCount() * RDPConfig.REALITY_ANCHOR_RDP_RESISTANCE);
+            int centerX = (region.getRegionX() * RDPConfig.REGION_SIZE_CHUNKS
+                + RDPConfig.REGION_SIZE_CHUNKS / 2) * 16 + 8;
+            int centerZ = (region.getRegionZ() * RDPConfig.REGION_SIZE_CHUNKS
+                + RDPConfig.REGION_SIZE_CHUNKS / 2) * 16 + 8;
+            double anchorSuppression = state.getAnchorSuppression(centerX, 64, centerZ,
+                net.vas.rdpcore.entity.RealityAnchorCapability.REALITY_STABILIZATION);
+            double anchorEffect = Math.max(0.0D,
+                (region.getRealityAnchorCount() * RDPConfig.REALITY_ANCHOR_RDP_RESISTANCE
+                    + anchorSuppression * RDPConfig.REALITY_ANCHOR_RDP_RESISTANCE)
+                    * currentMods.anchorEfficiency);
             double delta = (pressure * 0.001D) - anchorEffect - (0.0005D); // damping
             // clamp per-cycle change
             delta = Math.max(-0.01D, Math.min(0.02D, delta));

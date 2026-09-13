@@ -11,6 +11,15 @@ import org.apache.logging.log4j.Logger;
  */
 import net.vas.rdpcore.core.GlobalRDPLevel;
 import java.util.EnumMap;
+import java.util.EnumSet;
+import net.vas.rdpcore.entity.RealityAnchorCapability;
+import net.vas.rdpcore.entity.RealityAnchorDefinition;
+import net.vas.rdpcore.entity.RealityAnchorRegistry;
+import net.vas.rdpcore.entity.RealityAnchorProfile;
+import net.vas.rdpcore.entity.RealityAnchorProfiles;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 public class RDPConfig {
     
@@ -54,6 +63,13 @@ public class RDPConfig {
     public static boolean ENABLE_REALITY_ANCHORS = true;
     public static double REALITY_ANCHOR_RDP_RESISTANCE = 0.05D;
     public static double ANCHOR_MAX_EFFECT_RADIUS = 64.0D; // blocks
+    public static String[] REALITY_ANCHOR_DEFINITIONS = new String[0];
+    public static String[] REALITY_ANCHOR_PROFILES = new String[0];
+    private static final List<String> REALITY_ANCHOR_DIAGNOSTICS = new ArrayList<>();
+
+    public static List<String> getRealityAnchorDiagnostics() {
+        return Collections.unmodifiableList(REALITY_ANCHOR_DIAGNOSTICS);
+    }
     
     // Hotspot defaults
     public static int HOTSPOT_MAX_PER_WORLD = 256;
@@ -204,6 +220,24 @@ public class RDPConfig {
                 true,
                 "Whether reality anchors can resist RDP progression"
             );
+
+            REALITY_ANCHOR_DEFINITIONS = config.getStringList(
+                "Anchor definitions",
+                "realityAnchors",
+                new String[0],
+                "blockId[:metadata],radius,strength,capabilities separated by |"
+            );
+            REALITY_ANCHOR_PROFILES = config.getStringList("Anchor profiles", "realityAnchors",
+                new String[0], "name,radiusMultiplier,strengthMultiplier,capabilities separated by |");
+            ANCHOR_MAX_EFFECT_RADIUS = config.getFloat("Maximum anchor effect radius", "realityAnchors",
+                64.0F, 0.0F, 4096.0F, "Upper bound used by the default anchor profile");
+            RealityAnchorRegistry.clear();
+            RealityAnchorProfiles.clear();
+            REALITY_ANCHOR_DIAGNOSTICS.clear();
+            for (String profile : REALITY_ANCHOR_PROFILES) registerAnchorProfile(profile);
+            for (String definition : REALITY_ANCHOR_DEFINITIONS) {
+                registerAnchorDefinition(definition);
+            }
             
             ENABLE_JUDGEMENT_DAY = config.getBoolean(
                 "Enable Judgement Day",
@@ -215,11 +249,65 @@ public class RDPConfig {
             if (config.hasChanged()) {
                 config.save();
             }
-            
+
             LOGGER.info("R.D.P. Core configuration loaded successfully.");
             
         } catch (Exception e) {
             LOGGER.error("Failed to load R.D.P. Core configuration!", e);
+        }
+    }
+
+    private static void registerAnchorDefinition(String value) {
+        try {
+            String[] fields = value.split(",", -1);
+            String blockValue = fields[0].trim();
+            int metadata = -1;
+            int separator = blockValue.lastIndexOf(':');
+            if (separator > 0 && separator + 1 < blockValue.length()) {
+                String suffix = blockValue.substring(separator + 1);
+                if (suffix.matches("\\d+")) {
+                    metadata = Integer.parseInt(suffix);
+                    blockValue = blockValue.substring(0, separator);
+                }
+            }
+            double radius = fields.length > 1 ? Double.parseDouble(fields[1]) : ANCHOR_MAX_EFFECT_RADIUS;
+            double strength = fields.length > 2 ? Double.parseDouble(fields[2]) : 1.0D;
+            String diagnostic = RealityAnchorDefinition.validate(blockValue, metadata, radius, strength);
+            if (diagnostic != null) {
+                REALITY_ANCHOR_DIAGNOSTICS.add(value + ": " + diagnostic);
+                LOGGER.warn("Ignoring invalid reality anchor definition '{}': {}", value, diagnostic);
+                return;
+            }
+            if (!RealityAnchorRegistry.isKnownBlockId(blockValue)) {
+                REALITY_ANCHOR_DIAGNOSTICS.add(value + ": block is not currently registered (it may be supplied by a late-loading mod)");
+            }
+            EnumSet<RealityAnchorCapability> capabilities = EnumSet.noneOf(RealityAnchorCapability.class);
+            if (fields.length > 3) {
+                for (String name : fields[3].split("\\|")) {
+                    capabilities.add(RealityAnchorCapability.valueOf(name.trim().toUpperCase()));
+                }
+            }
+            String profile = fields.length > 4 ? fields[4].trim() : "default";
+            RealityAnchorRegistry.register(new RealityAnchorDefinition(
+                blockValue, metadata, radius, strength, capabilities, profile));
+        } catch (RuntimeException ex) {
+            REALITY_ANCHOR_DIAGNOSTICS.add(value + ": " + ex.getMessage());
+            LOGGER.warn("Ignoring invalid reality anchor definition '{}': {}", value, ex.getMessage());
+        }
+    }
+
+    private static void registerAnchorProfile(String value) {
+        try {
+            String[] fields = value.split(",", -1);
+            if (fields.length < 3) throw new IllegalArgumentException("profile requires name,radiusMultiplier,strengthMultiplier");
+            EnumSet<RealityAnchorCapability> capabilities = EnumSet.noneOf(RealityAnchorCapability.class);
+            if (fields.length > 3) for (String name : fields[3].split("\\|"))
+                capabilities.add(RealityAnchorCapability.valueOf(name.trim().toUpperCase()));
+            RealityAnchorProfiles.register(new RealityAnchorProfile(fields[0].trim(),
+                Double.parseDouble(fields[1]), Double.parseDouble(fields[2]), capabilities));
+        } catch (RuntimeException ex) {
+            REALITY_ANCHOR_DIAGNOSTICS.add(value + ": " + ex.getMessage());
+            LOGGER.warn("Ignoring invalid reality anchor profile '{}': {}", value, ex.getMessage());
         }
     }
     

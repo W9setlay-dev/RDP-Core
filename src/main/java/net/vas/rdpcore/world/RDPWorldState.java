@@ -7,6 +7,8 @@ import net.minecraftforge.common.util.INBTSerializable;
 import net.minecraft.nbt.NBTTagCompound;
 import net.vas.rdpcore.core.GlobalRDPLevel;
 import net.vas.rdpcore.region.RDPRegion;
+import net.vas.rdpcore.entity.RealityAnchor;
+import net.vas.rdpcore.entity.RealityAnchorCapability;
 
 /**
  * World-level R.D.P. state management.
@@ -17,6 +19,7 @@ public class RDPWorldState implements INBTSerializable<NBTTagCompound> {
     private final World world;
     private GlobalRDPLevel globalRDPLevel = new GlobalRDPLevel();
     private Map<Long, RDPRegion> regions = new HashMap<>();
+    private Map<String, RealityAnchor> realityAnchors = new HashMap<>();
     
     // Hotspots active in the world (keyed by id)
     private Map<String, net.vas.rdpcore.region.Hotspot> hotspots = new HashMap<>();
@@ -43,6 +46,65 @@ public class RDPWorldState implements INBTSerializable<NBTTagCompound> {
     
     public GlobalRDPLevel getGlobalRDPLevel() {
         return globalRDPLevel;
+    }
+
+    public Map<String, RealityAnchor> getRealityAnchors() {
+        return realityAnchors;
+    }
+
+    public void addRealityAnchor(String id, RealityAnchor anchor) {
+        if (id != null && anchor != null) {
+            realityAnchors.put(id, anchor);
+            getOrCreateRegion(anchor.getX() >> 4, anchor.getZ() >> 4).setRealityAnchorCount(
+                countActiveAnchorsInRegion(anchor.getX() >> 4, anchor.getZ() >> 4));
+        }
+    }
+
+    public RealityAnchor registerPlacedAnchor(int x, int y, int z, String blockId, int metadata) {
+        net.vas.rdpcore.entity.RealityAnchorDefinition definition =
+            net.vas.rdpcore.entity.RealityAnchorRegistry.find(blockId, metadata);
+        if (definition == null) return null;
+        String id = "block:" + x + ":" + y + ":" + z;
+        RealityAnchor anchor = new RealityAnchor(x, y, z, world.getWorldInfo().getWorldName(), definition);
+        addRealityAnchor(id, anchor);
+        return anchor;
+    }
+
+    public RealityAnchor removePlacedAnchor(int x, int y, int z) {
+        return removeRealityAnchor("block:" + x + ":" + y + ":" + z);
+    }
+
+    public void tickRealityAnchors() {
+        for (RealityAnchor anchor : realityAnchors.values()) anchor.tick();
+    }
+
+    public RealityAnchor removeRealityAnchor(String id) {
+        RealityAnchor removed = realityAnchors.remove(id);
+        if (removed != null) {
+            getOrCreateRegion(removed.getX() >> 4, removed.getZ() >> 4).setRealityAnchorCount(
+                countActiveAnchorsInRegion(removed.getX() >> 4, removed.getZ() >> 4));
+        }
+        return removed;
+    }
+
+    public double getAnchorSuppression(int x, int y, int z, RealityAnchorCapability capability) {
+        double suppression = 0.0D;
+        for (RealityAnchor anchor : realityAnchors.values()) {
+            if (anchor.hasCapability(capability)) suppression += anchor.getInfluenceAt(x, y, z);
+        }
+        return Math.min(1.0D, Math.max(0.0D, suppression));
+    }
+
+    public double getAnchorInfluence(int x, int y, int z, RealityAnchorCapability capability) {
+        return getAnchorSuppression(x, y, z, capability);
+    }
+
+    private int countActiveAnchorsInRegion(int chunkX, int chunkZ) {
+        int count = 0;
+        for (RealityAnchor anchor : realityAnchors.values()) {
+            if (anchor.isActive() && (anchor.getX() >> 4) == chunkX && (anchor.getZ() >> 4) == chunkZ) count++;
+        }
+        return count;
     }
     
     /**
@@ -150,11 +212,18 @@ public class RDPWorldState implements INBTSerializable<NBTTagCompound> {
         }
         tag.setTag("regions", regionsTag);
 
+        NBTTagCompound anchorsTag = new NBTTagCompound();
+        for (Map.Entry<String, RealityAnchor> anchor : realityAnchors.entrySet()) {
+            anchorsTag.setTag(anchor.getKey(), anchor.getValue().serializeNBT());
+        }
+        tag.setTag("realityAnchors", anchorsTag);
+
         // Hotspots
         NBTTagCompound hotspotsTag = new NBTTagCompound();
         for (Map.Entry<String, net.vas.rdpcore.region.Hotspot> h : hotspots.entrySet()) {
             hotspotsTag.setTag(h.getKey(), h.getValue().serializeNBT());
         }
+
         tag.setTag("hotspots", hotspotsTag);
         
         // Serialize scars
@@ -192,6 +261,16 @@ public class RDPWorldState implements INBTSerializable<NBTTagCompound> {
                 } catch (NumberFormatException ex) {
                     // ignore
                 }
+            }
+        }
+
+        if (nbt.hasKey("realityAnchors")) {
+            NBTTagCompound anchorsTag = nbt.getCompoundTag("realityAnchors");
+            this.realityAnchors.clear();
+            for (String id : anchorsTag.getKeySet()) {
+                RealityAnchor anchor = new RealityAnchor(0, 0, 0, "");
+                anchor.deserializeNBT(anchorsTag.getCompoundTag(id));
+                this.realityAnchors.put(id, anchor);
             }
         }
 

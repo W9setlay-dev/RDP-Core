@@ -6,6 +6,11 @@ import net.vas.rdpcore.core.GlobalRDPLevel;
 import net.vas.rdpcore.region.RDPRegion;
 import net.vas.rdpcore.world.RDPWorldState;
 import net.vas.rdpcore.entity.RealityAnchor;
+import net.vas.rdpcore.entity.RealityAnchorDefinition;
+import net.vas.rdpcore.entity.RealityAnchorRegistry;
+import net.vas.rdpcore.entity.RealityAnchorCapability;
+import net.vas.rdpcore.region.RDPRegion.AnomalyData;
+import java.util.UUID;
 import net.vas.rdpcore.anomaly.Anomaly;
 import net.vas.rdpcore.server.RDPServerContext;
 import java.util.HashMap;
@@ -145,17 +150,59 @@ public class RDPAPI {
      * Spawn an anomaly at a location
      */
     public static void spawnAnomaly(World world, int x, int y, int z, String anomalyType, double intensity) {
-        // TODO: Create and register anomaly
-        // This will be implemented in the anomaly registry
+        if (world == null || anomalyType == null || anomalyType.trim().isEmpty()) return;
+        RDPWorldState state = getWorldState(world);
+        if (state == null) return;
+        RDPRegion region = state.getOrCreateRegion(Math.floorDiv(x, 16), Math.floorDiv(z, 16));
+        if (region.getAnomalies().size() >= net.vas.rdpcore.config.RDPConfig.MAX_ANOMALIES_PER_REGION) return;
+        AnomalyData data = new AnomalyData();
+        data.type = anomalyType.toUpperCase();
+        data.intensity = Math.max(0.0D, Math.min(1.0D, intensity));
+        data.x = x;
+        data.y = y;
+        data.z = z;
+        region.addAnomaly(UUID.randomUUID().toString(), data);
     }
     
     /**
      * Place a reality anchor
      */
     public static RealityAnchor placeRealityAnchor(World world, int x, int y, int z) {
+        if (world == null) return null;
         RealityAnchor anchor = new RealityAnchor(x, y, z, world.getWorldInfo().getWorldName());
-        // TODO: Register anchor in world state
+        RDPWorldState state = getWorldState(world);
+        if (state != null) state.addRealityAnchor(UUID.randomUUID().toString(), anchor);
         return anchor;
+    }
+
+    public static RealityAnchor registerPlacedRealityAnchor(World world, int x, int y, int z,
+                                                              String blockId, int metadata) {
+        RDPWorldState state = getWorldState(world);
+        return state == null ? null : state.registerPlacedAnchor(x, y, z, blockId, metadata);
+    }
+
+    public static RealityAnchor removePlacedRealityAnchor(World world, int x, int y, int z) {
+        RDPWorldState state = getWorldState(world);
+        return state == null ? null : state.removePlacedAnchor(x, y, z);
+    }
+
+    public static void registerRealityAnchorDefinition(RealityAnchorDefinition definition) {
+        RealityAnchorRegistry.register(definition);
+    }
+
+    public static double getEffectiveRDP(World world, int x, int y, int z) {
+        RDPWorldState state = getWorldState(world);
+        if (state == null) return 0.0D;
+        RDPRegion region = state.getOrCreateRegion(Math.floorDiv(x, 16), Math.floorDiv(z, 16));
+        double base = Math.max(state.getGlobalRDPLevel().getLevel(), region.getLocalRDPLevel());
+        return base * (1.0D - state.getAnchorSuppression(x, y, z,
+            RealityAnchorCapability.REALITY_STABILIZATION));
+    }
+
+    public static double getAnchorInfluence(World world, int x, int y, int z,
+                                             RealityAnchorCapability capability) {
+        RDPWorldState state = getWorldState(world);
+        return state == null ? 0.0D : state.getAnchorInfluence(x, y, z, capability);
     }
     
     /**
@@ -182,7 +229,7 @@ public class RDPAPI {
     public static RDPWorldState getWorldState(World world) {
         if (world == null) return null;
         
-        String worldKey = world.getWorldInfo().getWorldName();
+        String worldKey = world.getWorldInfo().getWorldName() + "#" + world.provider.getDimension();
         if (!worldStates.containsKey(worldKey)) {
             worldStates.put(worldKey, new RDPWorldState(world));
         }
@@ -193,7 +240,7 @@ public class RDPAPI {
      * Save or register world state (called from simulation loop or world save)
      */
     public static void saveWorldState(World world, RDPWorldState state) {
-        String worldKey = world.getWorldInfo().getWorldName();
+        String worldKey = world.getWorldInfo().getWorldName() + "#" + world.provider.getDimension();
         worldStates.put(worldKey, state);
         // persistence is handled by world save hooks (RDPWorldEventHandler)
     }
@@ -202,7 +249,7 @@ public class RDPAPI {
      * Register world state (called when world loads)
      */
     public static void registerWorldState(World world, RDPWorldState state) {
-        String worldKey = world.getWorldInfo().getWorldName();
+        String worldKey = world.getWorldInfo().getWorldName() + "#" + world.provider.getDimension();
         worldStates.put(worldKey, state);
     }
     
@@ -211,7 +258,7 @@ public class RDPAPI {
      */
     public static void unregisterWorldState(World world) {
         if (world == null) return;
-        String worldKey = world.getWorldInfo().getWorldName();
+        String worldKey = world.getWorldInfo().getWorldName() + "#" + world.provider.getDimension();
         worldStates.remove(worldKey);
     }
 }

@@ -21,6 +21,27 @@ public class RDPWorldEventHandler {
     
     private static final Logger LOGGER = LogManager.getLogger("rdpcore");
 
+    @SubscribeEvent
+    public void onBlockPlaced(net.minecraftforge.event.world.BlockEvent.PlaceEvent event) {
+        World world = event.getWorld();
+        if (world.isRemote || !net.vas.rdpcore.config.RDPConfig.ENABLE_REALITY_ANCHORS) return;
+        net.minecraft.util.ResourceLocation id = event.getPlacedBlock().getBlock().getRegistryName();
+        if (id == null) return;
+        int metadata = event.getPlacedBlock().getBlock().getMetaFromState(event.getPlacedBlock());
+        net.vas.rdpcore.world.RDPWorldState state = net.vas.rdpcore.api.RDPAPI.getWorldState(world);
+        if (state != null) state.registerPlacedAnchor(event.getPos().getX(), event.getPos().getY(),
+            event.getPos().getZ(), id.toString(), metadata);
+    }
+
+    @SubscribeEvent
+    public void onBlockBroken(net.minecraftforge.event.world.BlockEvent.BreakEvent event) {
+        World world = event.getWorld();
+        if (world.isRemote) return;
+        net.vas.rdpcore.world.RDPWorldState state = net.vas.rdpcore.api.RDPAPI.getWorldState(world);
+        if (state != null) state.removePlacedAnchor(event.getPos().getX(), event.getPos().getY(),
+            event.getPos().getZ());
+    }
+
     @SubscribeEvent(priority = EventPriority.HIGHEST)
     public void onWorldLoad(WorldEvent.Load event) {
         World world = event.getWorld();
@@ -113,4 +134,3 @@ public class RDPWorldEventHandler {
         }
     }
 }
-

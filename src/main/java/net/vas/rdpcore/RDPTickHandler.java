@@ -33,7 +33,12 @@ public class RDPTickHandler {
         try {
             for (WorldServer world : server.worlds) {
                 if (world == null) continue;
-                long totalTicks = world.getTotalWorldTime();
+            net.vas.rdpcore.world.RDPWorldState state =
+                net.vas.rdpcore.api.RDPAPI.getWorldState(world);
+            if (state != null && net.vas.rdpcore.config.RDPConfig.ENABLE_REALITY_ANCHORS) {
+                state.tickRealityAnchors();
+            }
+            long totalTicks = world.getTotalWorldTime();
                 if (totalTicks % net.vas.rdpcore.config.RDPConfig.SIMULATION_INTERVAL_TICKS == 0) {
                     try {
                         RDPSimulationEngine.runSimulationForWorld(world);
@@ -48,4 +53,3 @@ public class RDPTickHandler {
         }
     }
 }
-

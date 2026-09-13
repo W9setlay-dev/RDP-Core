@@ -25,13 +25,15 @@ import org.apache.logging.log4j.Logger;
  * - SCP pressure (SCP entities)
  */
 public class RDPIntegrationManager {
+    private static final String LOG_SEPARATOR =
+        "================================================================================";
     
     private static final Logger LOGGER = LogManager.getLogger("rdpcore");
     
     public static void initializeIntegrations() {
-        LOGGER.info("=".repeat(80));
+        LOGGER.info(LOG_SEPARATOR);
         LOGGER.info("Initializing modpack integrations...");
-        LOGGER.info("=".repeat(80));
+        LOGGER.info(LOG_SEPARATOR);
         
         // Register pressure sources
         initializePressureSources();
@@ -39,9 +41,9 @@ public class RDPIntegrationManager {
         // Initialize mod integrations
         initializeModIntegrations();
         
-        LOGGER.info("=".repeat(80));
+        LOGGER.info(LOG_SEPARATOR);
         LOGGER.info("Modpack integrations complete.");
-        LOGGER.info("=".repeat(80));
+        LOGGER.info(LOG_SEPARATOR);
     }
     
     /**

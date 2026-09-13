@@ -29,6 +29,8 @@ import net.vas.rdpcore.config.RDPConfig;
     updateJSON = ""
 )
 public class RDPCore {
+    private static final String LOG_SEPARATOR =
+        "================================================================================";
     
     public static final String MOD_ID = "rdpcore";
     public static final String MOD_NAME = "RDP Core";
@@ -41,10 +43,10 @@ public class RDPCore {
     
     @Mod.EventHandler
     public void preInit(FMLPreInitializationEvent event) {
-        LOGGER.info("=".repeat(80));
+        LOGGER.info(LOG_SEPARATOR);
         LOGGER.info("R.D.P. CORE - REALITY DISTORTION PHENOMENON");
         LOGGER.info("Loading fundamental world-state simulation system...");
-        LOGGER.info("=".repeat(80));
+        LOGGER.info(LOG_SEPARATOR);
         
         // Initialize configuration system
         RDPConfig.load();
@@ -81,7 +83,7 @@ public class RDPCore {
         RDPIntegrationManager.initializeIntegrations();
         
         LOGGER.info("Post-initialization complete. R.D.P. Core ready.");
-        LOGGER.info("=".repeat(80));
+        LOGGER.info(LOG_SEPARATOR);
     }
 
     @Mod.EventHandler
