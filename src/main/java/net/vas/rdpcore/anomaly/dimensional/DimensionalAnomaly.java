@@ -1,6 +1,11 @@
 package net.vas.rdpcore.anomaly.dimensional;
 
 import net.vas.rdpcore.anomaly.Anomaly;
+import net.vas.rdpcore.config.RDPConfig;
+import net.vas.rdpcore.mutation.MutationCoordinator;
+import net.vas.rdpcore.mutation.MutationRequest;
+import net.vas.rdpcore.region.RDPRegion;
+import net.vas.rdpcore.world.RDPWorldState;
 
 /**
  * Dimensional anomalies represent interdimensional distortions.
@@ -39,17 +44,45 @@ public class DimensionalAnomaly extends Anomaly {
     }
     
     @Override
-    public void applyEffect(net.vas.rdpcore.world.RDPWorldState worldState) {
-        // TODO: Apply dimensional distortion effects
-        // - Create dimensional rifts
-        // - Spawn entities from other dimensions
-        // - Allow blocks from other dimensions to leak through
+    public void applyEffect(RDPWorldState worldState) {
+        if (worldState == null) return;
+
+        RDPRegion region = regionFor(worldState);
+        double normalizedIntensity = Math.min(1.0D, getIntensity());
+        region.addPressure(Math.min(0.08D, normalizedIntensity * 0.03D));
+        spilledEntities = 0;
+
+        if (age > 0 && age % 60 == 0) {
+            String dimension = worldState.getWorld() == null ? "unknown"
+                : Integer.toString(worldState.getWorld().provider.getDimension());
+            MutationRequest request = MutationRequest.builder()
+                .center(x >> 4, z >> 4)
+                .radius(Math.min(4, riftSize))
+                .profile("rdp_dimensional_leak")
+                .intensity((float) normalizedIntensity)
+                .priority(40)
+                .budget(100)
+                .cause("RDP_DIMENSIONAL_ANOMALY")
+                .dimension(dimension)
+                .build();
+            MutationCoordinator.getInstance().queueMutation(request, 50);
+            worldState.recordMutationEvent("ANOMALY", "RDP_DIMENSIONAL_ANOMALY",
+                region.getRegionX(), region.getRegionZ(), normalizedIntensity, dimension);
+        }
     }
     
     @Override
     public void tick() {
         super.tick();
         // Dimensional rifts grow as intensity increases
-        this.riftSize = (int) Math.ceil(1.0D + (intensity * 10.0D));
+        this.riftSize = Math.min(10, Math.max(1, (int) Math.ceil(1.0D + (getIntensity() * 10.0D))));
+    }
+
+    private RDPRegion regionFor(RDPWorldState worldState) {
+        int blocksPerRegion = RDPConfig.REGION_SIZE_CHUNKS * 16;
+        int regionX = Math.floorDiv(x, blocksPerRegion);
+        int regionZ = Math.floorDiv(z, blocksPerRegion);
+        return worldState.getOrCreateRegion(regionX * RDPConfig.REGION_SIZE_CHUNKS,
+            regionZ * RDPConfig.REGION_SIZE_CHUNKS);
     }
 }
