@@ -58,6 +58,13 @@ public class RDPSimulationEngine {
         RDPWorldState state = RDPAPI.getWorldState(world);
         if (state == null) return;
 
+        try {
+            net.vas.rdpcore.anomaly.interdimensional.InterdimensionalAnomalyManager
+                .tick(world, state, world.getTotalWorldTime());
+        } catch (RuntimeException ex) {
+            LOGGER.warn("Interdimensional anomaly processing failed: {}", ex.getMessage());
+        }
+
         // Stage modifiers for this simulation
         net.vas.rdpcore.core.GlobalRDPLevel.RDPStage currentStage = state.getGlobalRDPLevel().getCurrentStage();
         net.vas.rdpcore.config.RDPConfig.StageModifiers currentMods = net.vas.rdpcore.config.RDPConfig.getStageModifiers(currentStage);

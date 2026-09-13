@@ -6,6 +6,7 @@ import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import net.vas.rdpcore.anomaly.interdimensional.InterdimensionalGravityManager;
 
 /**
  * Server tick handler - drives RDP simulation on each server tick.
@@ -39,6 +40,14 @@ public class RDPTickHandler {
                 state.tickRealityAnchors();
             }
             long totalTicks = world.getTotalWorldTime();
+            if (state != null) {
+                try {
+                    InterdimensionalGravityManager.tick(world, state, totalTicks);
+                } catch (Throwable t) {
+                    LOGGER.error("[RDP] Gravity field failed for world {}: {}",
+                        world.provider.getDimension(), t.getMessage(), t);
+                }
+            }
                 if (totalTicks % net.vas.rdpcore.config.RDPConfig.SIMULATION_INTERVAL_TICKS == 0) {
                     try {
                         RDPSimulationEngine.runSimulationForWorld(world);

@@ -112,6 +112,12 @@ public class ChunkRewriterBridge {
             invokeBuilderMethod(builder, crRequestBuilderClass, "center", 
                 new Class<?>[] {int.class, int.class}, 
                 new Object[] {rdpRequest.getCenterChunkX(), rdpRequest.getCenterChunkZ()});
+
+            if (rdpRequest.getWorld() != null) {
+                invokeBuilderMethod(builder, crRequestBuilderClass, "world",
+                    new Class<?>[] {net.minecraft.world.World.class},
+                    new Object[] {rdpRequest.getWorld()});
+            }
             
             invokeBuilderMethod(builder, crRequestBuilderClass, "radius",
                 new Class<?>[] {int.class},

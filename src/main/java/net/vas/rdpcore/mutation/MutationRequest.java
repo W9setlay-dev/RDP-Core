@@ -1,5 +1,7 @@
 package net.vas.rdpcore.mutation;
 
+import net.minecraft.world.World;
+
 /**
  * Simple data holder for mutation requests to the Chunk Rewriter.
  * In production, this would integrate with RDPChunkRewriter's MutationRequest class.
@@ -15,6 +17,7 @@ public class MutationRequest {
     private final int budget;
     private final String cause;
     private final String dimension;
+    private final World world;
     
     private MutationRequest(Builder builder) {
         this.centerChunkX = builder.centerChunkX;
@@ -26,6 +29,7 @@ public class MutationRequest {
         this.budget = builder.budget;
         this.cause = builder.cause;
         this.dimension = builder.dimension;
+        this.world = builder.world;
     }
     
     public static Builder builder() {
@@ -67,6 +71,10 @@ public class MutationRequest {
     public String getDimension() {
         return dimension;
     }
+
+    public World getWorld() {
+        return world;
+    }
     
     public static class Builder {
         private int centerChunkX;
@@ -78,6 +86,7 @@ public class MutationRequest {
         private int budget = 1000;
         private String cause = "UNKNOWN";
         private String dimension = "minecraft:overworld";
+        private World world;
         
         public Builder center(int chunkX, int chunkZ) {
             this.centerChunkX = chunkX;
@@ -117,6 +126,11 @@ public class MutationRequest {
         
         public Builder dimension(String d) {
             this.dimension = d;
+            return this;
+        }
+
+        public Builder world(World w) {
+            this.world = w;
             return this;
         }
         

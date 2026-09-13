@@ -18,7 +18,7 @@ public class RdpCommand extends CommandBase {
 
     @Override
     public String getUsage(ICommandSender sender) {
-        return "/rdp status|simulate <cycles>|set <level>";
+        return "/rdp status|simulate <cycles>|set <level>|anomaly list|create <profile>";
     }
 
     @Override
@@ -57,6 +57,22 @@ public class RdpCommand extends CommandBase {
                 net.vas.rdpcore.RDPSimulationEngine.runSimulationForWorld((net.minecraft.world.WorldServer)sender.getEntityWorld());
             }
             sender.sendMessage(new TextComponentString("Simulated " + cycles + " cycles."));
+        } else if (sub.equalsIgnoreCase("anomaly")) {
+            if (args.length >= 2 && args[1].equalsIgnoreCase("list")) {
+                int count = RDPAPI.getInterdimensionalAnomalies(sender.getEntityWorld()).size();
+                sender.sendMessage(new TextComponentString("Interdimensional anomalies: " + count));
+            } else if (args.length >= 2 && args[1].equalsIgnoreCase("create")
+                    && args.length >= 3) {
+                net.vas.rdpcore.anomaly.interdimensional.InterdimensionalAnomaly anomaly =
+                    RDPAPI.createInterdimensionalAnomaly(sender.getEntityWorld(), args[2],
+                        sender.getPosition().getX(), sender.getPosition().getY(),
+                        sender.getPosition().getZ());
+                sender.sendMessage(new TextComponentString(anomaly == null
+                    ? "Anomaly creation rejected" : "Created anomaly " + anomaly.getId()));
+            } else {
+                sender.sendMessage(new TextComponentString(
+                    "Usage: /rdp anomaly list|create <profile>"));
+            }
         } else if (sub.equalsIgnoreCase("set") && args.length >= 2) {
             try {
                 double level = Double.parseDouble(args[1]);

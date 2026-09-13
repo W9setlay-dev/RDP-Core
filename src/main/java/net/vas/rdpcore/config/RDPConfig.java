@@ -17,6 +17,7 @@ import net.vas.rdpcore.entity.RealityAnchorDefinition;
 import net.vas.rdpcore.entity.RealityAnchorRegistry;
 import net.vas.rdpcore.entity.RealityAnchorProfile;
 import net.vas.rdpcore.entity.RealityAnchorProfiles;
+import net.vas.rdpcore.anomaly.interdimensional.GravityFieldConfig;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -82,6 +83,17 @@ public class RDPConfig {
     public static int MUTATION_NORMAL_BUDGET = 500;
     public static int MUTATION_CRITICAL_BUDGET = 2000;
     public static int MAX_ANOMALIES_ACTIVE_PER_WORLD = 1024;
+
+    // Interdimensional collision safety and scheduling
+    public static boolean ENABLE_INTERDIMENSIONAL_ANOMALIES = true;
+    public static int INTERDIMENSIONAL_MAX_ACTIVE = 32;
+    public static int INTERDIMENSIONAL_MAX_RADIUS_CHUNKS = 16;
+    public static int INTERDIMENSIONAL_MAX_AFFECTED_CHUNKS = 4096;
+    public static int INTERDIMENSIONAL_CHUNKS_PER_CYCLE = 2;
+    public static int INTERDIMENSIONAL_BLOCKS_PER_CYCLE = 500;
+    public static boolean INTERDIMENSIONAL_DECAY_ENABLED = true;
+    public static boolean ENABLE_INTERDIMENSIONAL_GRAVITY = true;
+    public static final GravityFieldConfig GRAVITY = GravityFieldConfig.defaults();
 
     // Stage modifiers per RDP stage
     public static class StageModifiers {
@@ -245,6 +257,62 @@ public class RDPConfig {
                 true,
                 "Whether RDP-X end-game is active"
             );
+
+            ENABLE_INTERDIMENSIONAL_ANOMALIES = config.getBoolean(
+                "Enable interdimensional anomalies", "interdimensional", true,
+                "Enable bounded, persistent dimensional collision profiles");
+            INTERDIMENSIONAL_MAX_ACTIVE = config.getInt(
+                "Maximum active anomalies", "interdimensional", 32, 0, 1024,
+                "World-wide hard cap for interdimensional anomalies");
+            INTERDIMENSIONAL_MAX_RADIUS_CHUNKS = config.getInt(
+                "Maximum anomaly radius in chunks", "interdimensional", 16, 1, 256,
+                "Hard radius cap used by rewrite requests");
+            INTERDIMENSIONAL_MAX_AFFECTED_CHUNKS = config.getInt(
+                "Maximum affected chunks", "interdimensional", 4096, 1, 65536,
+                "Per-anomaly affected-chunk cap");
+            INTERDIMENSIONAL_CHUNKS_PER_CYCLE = config.getInt(
+                "Chunks scheduled per cycle", "interdimensional", 2, 0, 64,
+                "Bounded rewrite requests scheduled per simulation cycle");
+            INTERDIMENSIONAL_BLOCKS_PER_CYCLE = config.getInt(
+                "Blocks requested per cycle", "interdimensional", 500, 0, 2000,
+                "Per-request mutation budget (the rewriter remains globally budgeted)");
+            INTERDIMENSIONAL_DECAY_ENABLED = config.getBoolean(
+                "Enable anomaly decay", "interdimensional", true,
+                "Close collapsed anomalies without restoring terrain");
+
+            // Local additional gravity. All values are validated again at runtime.
+            ENABLE_INTERDIMENSIONAL_GRAVITY = config.getBoolean("Enable anomaly gravity", "gravity", true,
+                "Apply bounded, server-authoritative additional acceleration around active anomalies");
+            GRAVITY.enabled = ENABLE_INTERDIMENSIONAL_GRAVITY;
+            GRAVITY.allowedProfiles = new java.util.HashSet<String>(java.util.Arrays.asList(
+                config.getStringList("Allowed profiles", "gravity", new String[0], "Empty means every profile")));
+            GRAVITY.deniedProfiles = new java.util.HashSet<String>(java.util.Arrays.asList(
+                config.getStringList("Denied profiles", "gravity", new String[0], "Profiles that never receive gravity")));
+            GRAVITY.minimumGlobalRdpLevel = config.getFloat("Minimum global RDP level", "gravity", 0.0F, 0.0F, 1.0F, "");
+            GRAVITY.maximumGlobalRdpLevel = config.getFloat("Maximum global RDP level", "gravity", 1.0F, 0.0F, 1.0F, "");
+            GRAVITY.minimumPressure = config.getFloat("Minimum pressure", "gravity", 0.20F, 0.0F, 1.0F, "");
+            GRAVITY.maximumPressure = config.getFloat("Maximum pressure", "gravity", 1.0F, 0.0F, 1.0F, "");
+            GRAVITY.minimumAnomalyStage = config.getInt("Minimum anomaly stage", "gravity", 1, 0, 3, "");
+            GRAVITY.maximumAnomalyStage = config.getInt("Maximum anomaly stage", "gravity", 3, 0, 3, "");
+            GRAVITY.activationDelayTicks = config.getInt("Activation delay ticks", "gravity", 0, 0, 720000, "");
+            GRAVITY.buildupEnabled = config.getBoolean("Buildup enabled", "gravity", true, "");
+            GRAVITY.buildupTicks = config.getInt("Buildup ticks", "gravity", 1200, 0, 720000, "");
+            GRAVITY.strength = config.getFloat("Strength", "gravity", 0.08F, 0.0F, 1.0F, "");
+            GRAVITY.radiusMultiplier = config.getFloat("Radius multiplier", "gravity", 1.0F, 0.0F, 16.0F, "");
+            GRAVITY.minimumRadius = config.getFloat("Minimum radius", "gravity", 0.0F, 0.0F, 4096.0F, "");
+            GRAVITY.maximumRadius = config.getFloat("Maximum radius", "gravity", 128.0F, 0.0F, 4096.0F, "");
+            GRAVITY.maximumAcceleration = config.getFloat("Maximum acceleration", "gravity", 0.25F, 0.0F, 0.25F, "");
+            GRAVITY.maximumVelocityChangePerTick = config.getFloat("Maximum velocity change per tick", "gravity", 0.30F, 0.0F, 0.30F, "");
+            GRAVITY.affectPlayers = config.getBoolean("Affect players", "gravity", true, "");
+            GRAVITY.affectLivingEntities = config.getBoolean("Affect living entities", "gravity", true, "");
+            GRAVITY.affectItems = config.getBoolean("Affect items", "gravity", true, "");
+            GRAVITY.affectProjectiles = config.getBoolean("Affect projectiles", "gravity", true, "");
+            GRAVITY.affectFallingBlocks = config.getBoolean("Affect falling blocks", "gravity", true, "");
+            GRAVITY.affectVehicles = config.getBoolean("Affect vehicles", "gravity", false, "");
+            GRAVITY.maxAnomaliesProcessedPerTick = config.getInt("Maximum anomalies processed per tick", "gravity", 16, 0, 1024, "");
+            GRAVITY.maxEntitiesProcessedPerTick = config.getInt("Maximum entities processed per tick", "gravity", 128, 0, 8192, "");
+            GRAVITY.updateIntervalTicks = config.getInt("Update interval ticks", "gravity", 1, 1, 20, "");
+            GRAVITY.validate();
             
             if (config.hasChanged()) {
                 config.save();

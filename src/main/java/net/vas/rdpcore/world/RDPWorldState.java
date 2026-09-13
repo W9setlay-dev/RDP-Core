@@ -2,6 +2,7 @@ package net.vas.rdpcore.world;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 import net.minecraft.world.World;
 import net.minecraftforge.common.util.INBTSerializable;
 import net.minecraft.nbt.NBTTagCompound;
@@ -9,6 +10,7 @@ import net.vas.rdpcore.core.GlobalRDPLevel;
 import net.vas.rdpcore.region.RDPRegion;
 import net.vas.rdpcore.entity.RealityAnchor;
 import net.vas.rdpcore.entity.RealityAnchorCapability;
+import net.vas.rdpcore.anomaly.interdimensional.InterdimensionalAnomaly;
 
 /**
  * World-level R.D.P. state management.
@@ -23,8 +25,21 @@ public class RDPWorldState implements INBTSerializable<NBTTagCompound> {
     
     // Hotspots active in the world (keyed by id)
     private Map<String, net.vas.rdpcore.region.Hotspot> hotspots = new HashMap<>();
+    private Map<UUID, InterdimensionalAnomaly> interdimensionalAnomalies = new HashMap<>();
 
     public Map<String, net.vas.rdpcore.region.Hotspot> getHotspots() { return hotspots; }
+
+    public Map<UUID, InterdimensionalAnomaly> getInterdimensionalAnomalies() {
+        return java.util.Collections.unmodifiableMap(interdimensionalAnomalies);
+    }
+
+    public void addInterdimensionalAnomaly(InterdimensionalAnomaly anomaly) {
+        if (anomaly != null) interdimensionalAnomalies.put(anomaly.getId(), anomaly);
+    }
+
+    public InterdimensionalAnomaly removeInterdimensionalAnomaly(UUID id) {
+        return id == null ? null : interdimensionalAnomalies.remove(id);
+    }
     
     // Global scar tracking (all scars across all regions)
     private Map<String, Scar> scars = new HashMap<>();
@@ -225,6 +240,12 @@ public class RDPWorldState implements INBTSerializable<NBTTagCompound> {
         }
 
         tag.setTag("hotspots", hotspotsTag);
+
+        NBTTagCompound interdimensionalTag = new NBTTagCompound();
+        for (Map.Entry<UUID, InterdimensionalAnomaly> entry : interdimensionalAnomalies.entrySet()) {
+            interdimensionalTag.setTag(entry.getKey().toString(), entry.getValue().serializeNBT());
+        }
+        tag.setTag("interdimensionalAnomalies", interdimensionalTag);
         
         // Serialize scars
         NBTTagCompound scarsTag = new NBTTagCompound();
@@ -282,6 +303,20 @@ public class RDPWorldState implements INBTSerializable<NBTTagCompound> {
                 net.vas.rdpcore.region.Hotspot h = new net.vas.rdpcore.region.Hotspot();
                 h.deserializeNBT(hotspotsTag.getCompoundTag(id));
                 this.hotspots.put(id, h);
+            }
+
+        }
+        if (nbt.hasKey("interdimensionalAnomalies")) {
+            NBTTagCompound anomaliesTag = nbt.getCompoundTag("interdimensionalAnomalies");
+            this.interdimensionalAnomalies.clear();
+            for (String id : anomaliesTag.getKeySet()) {
+                try {
+                    InterdimensionalAnomaly anomaly =
+                        InterdimensionalAnomaly.fromNBT(anomaliesTag.getCompoundTag(id));
+                    this.interdimensionalAnomalies.put(anomaly.getId(), anomaly);
+                } catch (RuntimeException ex) {
+                    // Ignore one malformed anomaly without invalidating the world state.
+                }
             }
         }
         

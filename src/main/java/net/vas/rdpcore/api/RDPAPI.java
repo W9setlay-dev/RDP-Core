@@ -15,6 +15,14 @@ import net.vas.rdpcore.anomaly.Anomaly;
 import net.vas.rdpcore.server.RDPServerContext;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Collections;
+import java.util.UUID;
+import net.vas.rdpcore.anomaly.interdimensional.InterdimensionalAnomaly;
+import net.vas.rdpcore.anomaly.interdimensional.InterdimensionalAnomalyManager;
+import net.vas.rdpcore.anomaly.interdimensional.GravityFieldConfig;
+import net.vas.rdpcore.anomaly.interdimensional.GravityGateEvaluator;
+import net.vas.rdpcore.anomaly.interdimensional.GravityGateResult;
+import net.vas.rdpcore.config.RDPConfig;
 
 /**
  * Public API surface for R.D.P. Core.
@@ -221,6 +229,34 @@ public class RDPAPI {
         if (state != null) {
             state.setJudgementDayActive(true);
         }
+    }
+
+    public static InterdimensionalAnomaly createInterdimensionalAnomaly(World world,
+                                                                             String profileId,
+                                                                             double x, double y, double z) {
+            if (!(world instanceof net.minecraft.world.WorldServer)) return null;
+            return InterdimensionalAnomalyManager.create((net.minecraft.world.WorldServer) world,
+                profileId, x, y, z, world.getTotalWorldTime());
+    }
+
+        public static Map<UUID, InterdimensionalAnomaly> getInterdimensionalAnomalies(World world) {
+            RDPWorldState state = getWorldState(world);
+            return state == null ? Collections.<UUID, InterdimensionalAnomaly>emptyMap()
+                : state.getInterdimensionalAnomalies();
+    }
+
+        public static boolean removeInterdimensionalAnomaly(World world, UUID id) {
+            RDPWorldState state = getWorldState(world);
+            return state != null && state.removeInterdimensionalAnomaly(id) != null;
+    }
+
+    /** Read-only gravity gate diagnostics for server-side integrations. */
+    public static GravityGateResult evaluateAnomalyGravity(World world, InterdimensionalAnomaly anomaly) {
+        RDPWorldState state = getWorldState(world);
+        return state == null ? GravityGateResult.inactive(GravityGateResult.Reason.INACTIVE_ANOMALY_STATE)
+            : GravityGateEvaluator.evaluate(anomaly, RDPConfig.GRAVITY,
+                state.getGlobalRDPLevel().getLevel(), state.getGlobalRDPLevel().getCurrentStage(),
+                world.getTotalWorldTime());
     }
     
     /**
